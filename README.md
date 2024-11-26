@@ -22,13 +22,13 @@ Welcome to the MERN Grocery Shop Project! This project is built using the MERN (
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/PradipKhamkar/grocery-shop.git
+   git clone https://github.com/Pavithran1729/Grorocery_Web_App
    ```
 
 2. Change into the project directory:
 
    ```bash
-   cd grocery-shop
+   cd backend
    ```
 
 3. Install backend dependencies:
