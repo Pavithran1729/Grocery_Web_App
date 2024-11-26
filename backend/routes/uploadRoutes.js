@@ -1,7 +1,13 @@
 import path from 'path'
 import express from 'express'
 import multer from 'multer'
+import fs from 'fs'
 const router = express.Router()
+
+// Create uploads directory if it doesn't exist
+if (!fs.existsSync('uploads')) {
+  fs.mkdirSync('uploads')
+}
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
@@ -14,7 +20,6 @@ const storage = multer.diskStorage({
     )
   },
 })
-
 
 function checkFileType(file, cb) {
   const filetypes = /jpg|jpeg|png/
