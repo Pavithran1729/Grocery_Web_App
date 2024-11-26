@@ -164,6 +164,39 @@ const getOrders = asyncHandler(async (req, res) => {
   }
 })
 
+// @desc    Cancel order
+// @route   PUT /api/orders/:id/cancel
+// @access  Private
+const cancelOrder = asyncHandler(async (req, res) => {
+  const order = await Order.findById(req.params.id)
+
+  if (!order) {
+    res.status(404)
+    throw new Error('Order not found')
+  }
+
+  // Check if order belongs to user or if user is admin
+  if (order.user.toString() !== req.user._id.toString() && !req.user.isAdmin) {
+    res.status(401)
+    throw new Error('Not authorized')
+  }
+
+  // Check if order can be cancelled
+  if (order.status === 'delivered') {
+    res.status(400)
+    throw new Error('Cannot cancel delivered order')
+  }
+
+  if (order.status === 'cancelled') {
+    res.status(400)
+    throw new Error('Order is already cancelled')
+  }
+
+  order.status = 'cancelled'
+  const updatedOrder = await order.save()
+  res.json(updatedOrder)
+})
+
 export {
   addOrderItems,
   getOrderById,
@@ -171,4 +204,5 @@ export {
   updateOrderToDelivered,
   getMyOrders,
   getOrders,
+  cancelOrder,
 }

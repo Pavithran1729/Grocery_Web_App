@@ -10,10 +10,12 @@ import {
   getOrderDetails,
   payOrder,
   deliverOrder,
+  cancelOrder,
 } from '../actions/orderActions'
 import {
   ORDER_PAY_RESET,
   ORDER_DELIVER_RESET,
+  ORDER_CANCEL_RESET,
 } from '../constants/orderConstants'
 
 const OrderScreen = ({ match, history }) => {
@@ -31,6 +33,9 @@ const OrderScreen = ({ match, history }) => {
 
   const orderDeliver = useSelector((state) => state.orderDeliver)
   const { loading: loadingDeliver, success: successDeliver } = orderDeliver
+
+  const orderCancel = useSelector((state) => state.orderCancel)
+  const { loading: loadingCancel, success: successCancel } = orderCancel
 
   const userLogin = useSelector((state) => state.userLogin)
   const { userInfo } = userLogin
@@ -52,21 +57,30 @@ const OrderScreen = ({ match, history }) => {
       return
     }
 
+    if (successCancel) {
+      history.push('/')
+      return
+    }
+
     const addPayPalScript = async () => {
       const { data: clientId } = await axios.get('/api/config/paypal')
       const script = document.createElement('script')
       script.type = 'text/javascript'
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}`
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&currency=USD`
       script.async = true
+      script.crossOrigin = 'anonymous'
+      script.setAttribute('data-namespace', 'paypal_sdk')
+      
       script.onload = () => {
         setSdkReady(true)
       }
       document.body.appendChild(script)
     }
 
-    if (!order || successPay || successDeliver || order._id !== orderId) {
+    if (!order || successPay || successDeliver || successCancel || order._id !== orderId) {
       dispatch({ type: ORDER_PAY_RESET })
       dispatch({ type: ORDER_DELIVER_RESET })
+      dispatch({ type: ORDER_CANCEL_RESET })
       dispatch(getOrderDetails(orderId))
     } else if (!order.isPaid) {
       if (!window.paypal) {
@@ -75,7 +89,7 @@ const OrderScreen = ({ match, history }) => {
         setSdkReady(true)
       }
     }
-  }, [dispatch, orderId, successPay, successDeliver, order, userInfo, history])
+  }, [dispatch, orderId, successPay, successDeliver, successCancel, order, userInfo, history])
 
   const successPaymentHandler = (paymentResult) => {
     console.log(paymentResult)
@@ -84,6 +98,12 @@ const OrderScreen = ({ match, history }) => {
 
   const deliverHandler = () => {
     dispatch(deliverOrder(order))
+  }
+
+  const cancelHandler = () => {
+    if (window.confirm('Are you sure you want to cancel this order?')) {
+      dispatch(cancelOrder(orderId))
+    }
   }
 
   return loading ? (
@@ -221,6 +241,21 @@ const OrderScreen = ({ match, history }) => {
                       onClick={deliverHandler}
                     >
                       Mark As Delivered
+                    </Button>
+                  </ListGroup.Item>
+                )}
+              {loadingCancel && <Loader />}
+              {userInfo &&
+                order.status !== 'cancelled' &&
+                order.status !== 'delivered' &&
+                !order.isDelivered && (
+                  <ListGroup.Item>
+                    <Button
+                      type='button'
+                      className='btn btn-block btn-danger'
+                      onClick={cancelHandler}
+                    >
+                      Cancel Order
                     </Button>
                   </ListGroup.Item>
                 )}

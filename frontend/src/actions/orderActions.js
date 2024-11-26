@@ -17,6 +17,9 @@ import {
   ORDER_DELIVER_REQUEST,
   ORDER_DELIVER_SUCCESS,
   ORDER_DELIVER_FAIL,
+  ORDER_CANCEL_REQUEST,
+  ORDER_CANCEL_SUCCESS,
+  ORDER_CANCEL_FAIL,
 } from '../constants/orderConstants'
 import { CART_CLEAR_ITEMS } from '../constants/cartConstants'
 import api from '../utils/api'
@@ -158,7 +161,7 @@ export const listMyOrders = () => async (dispatch) => {
   }
 }
 
-export const listOrders = () => async (dispatch) => {
+export const listOrders = () => async (dispatch, getState) => {
   try {
     dispatch({
       type: ORDER_LIST_REQUEST,
@@ -178,6 +181,39 @@ export const listOrders = () => async (dispatch) => {
     dispatch({
       type: ORDER_LIST_FAIL,
       payload: message,
+    })
+  }
+}
+
+export const cancelOrder = (orderId) => async (dispatch, getState) => {
+  try {
+    dispatch({
+      type: ORDER_CANCEL_REQUEST,
+    })
+
+    const {
+      userLogin: { userInfo },
+    } = getState()
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${userInfo.token}`,
+      },
+    }
+
+    const { data } = await api.put(`/api/orders/${orderId}/cancel`, {}, config)
+
+    dispatch({
+      type: ORDER_CANCEL_SUCCESS,
+      payload: data,
+    })
+  } catch (error) {
+    dispatch({
+      type: ORDER_CANCEL_FAIL,
+      payload:
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : error.message,
     })
   }
 }

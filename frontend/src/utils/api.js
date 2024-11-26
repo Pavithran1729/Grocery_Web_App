@@ -5,8 +5,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  // Use HTTP/1.1 instead of HTTP/2
-  httpVersion: '1.1'
+  withCredentials: true
 });
 
 // Add a request interceptor to add the auth token to every request
@@ -26,14 +25,22 @@ api.interceptors.request.use(
   }
 );
 
-// Add a response interceptor to handle token expiration
+// Add a response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('userInfo');
-      window.location.href = '/login';
+    if (error.response) {
+      // Handle specific error cases
+      switch (error.response.status) {
+        case 401:
+          // Handle unauthorized
+          break;
+        case 403:
+          // Handle forbidden
+          break;
+        default:
+          break;
+      }
     }
     return Promise.reject(error);
   }

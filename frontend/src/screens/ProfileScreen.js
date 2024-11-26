@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Table, Form, Button, Row, Col } from 'react-bootstrap'
+import { Table, Form, Button, Row, Col, Badge } from 'react-bootstrap'
 import { LinkContainer } from 'react-router-bootstrap'
 import { useDispatch, useSelector } from 'react-redux'
 import Message from '../components/Message'
@@ -50,6 +50,18 @@ const ProfileScreen = ({ location, history }) => {
       setMessage('Passwords do not match')
     } else {
       dispatch(updateUserProfile({ id: user._id, name, email, password }))
+    }
+  }
+
+  const getStatusBadge = (order) => {
+    if (order.status === 'cancelled') {
+      return <Badge bg="danger">Cancelled</Badge>
+    } else if (order.isDelivered) {
+      return <Badge bg="success">Delivered</Badge>
+    } else if (order.isPaid) {
+      return <Badge bg="info">Paid</Badge>
+    } else {
+      return <Badge bg="warning">Pending</Badge>
     }
   }
 
@@ -126,16 +138,16 @@ const ProfileScreen = ({ location, history }) => {
                 <th>DATE</th>
                 <th>TOTAL</th>
                 <th>PAID</th>
-                <th>DELIVERED</th>
+                <th>STATUS</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
               {orders.map((order) => (
-                <tr key={order._id}>
+                <tr key={order._id} className={order.status === 'cancelled' ? 'table-danger' : ''}>
                   <td>{order._id}</td>
                   <td>{order.createdAt.substring(0, 10)}</td>
-                  <td>{order.totalPrice}</td>
+                  <td>₹{order.totalPrice}</td>
                   <td>
                     {order.isPaid ? (
                       order.paidAt.substring(0, 10)
@@ -144,11 +156,7 @@ const ProfileScreen = ({ location, history }) => {
                     )}
                   </td>
                   <td>
-                    {order.isDelivered ? (
-                      order.deliveredAt.substring(0, 10)
-                    ) : (
-                      <i className='fas fa-times' style={{ color: 'red' }}></i>
-                    )}
+                    {getStatusBadge(order)}
                   </td>
                   <td>
                     <LinkContainer to={`/order/${order._id}`}>
